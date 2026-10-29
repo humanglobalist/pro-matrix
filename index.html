@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolitiCompass Pro - Deep Ideology & Compass Analysis</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        authLeft: '#e63946',
+                        authRight: '#457b9d',
+                        libLeft: '#2a9d8f',
+                        libRight: '#e9c46a',
+                        darkBg: '#0b0f19',
+                        cardBg: 'rgba(23, 31, 51, 0.7)',
+                        cardBorder: 'rgba(255, 255, 255, 0.08)'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #080b11;
+            color: #f1f5f9;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(69, 123, 157, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(230, 57, 70, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(42, 157, 143, 0.08) 0%, transparent 60%);
+            background-attachment: fixed;
+        }
+
+        .glass-card {
+            background: rgba(18, 26, 43, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .glass-card-hover {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card-hover:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px -10px rgba(99, 102, 241, 0.2);
+        }
+
+        .pulse-glow {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.35);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+
+        .compass-grid-line {
+            stroke: rgba(255, 255, 255, 0.12);
+            stroke-dasharray: 4 4;
+        }
+
+        /* Option selection animations */
+        .likert-btn {
+            transition: all 0.2s ease;
+        }
+        .likert-btn:hover {
+            transform: scale(1.03);
+        }
+        .likert-btn:active {
+            transform: scale(0.97);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Header / Navbar -->
+    <header class="sticky top-0 z-50 glass-card border-b border-slate-800/80 bg-slate-950/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="app.resetTest()">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-0.5 shadow-lg shadow-indigo-500/30">
+                    <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                        <i class="fa-solid font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-pink-400 fa-compass text-xl"></i>
+                    </div>
+                </div>
+                <div>
+                    <span class="font-extrabold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">PolitiCompass</span>
+                    <span class="text-xs px-2 py-0.5 ml-2 rounded-full bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-500/30">Pro Matrix</span>
+                </div>
+            </div>
+            
+            <div id="nav-step-indicator" class="hidden sm:flex items-center space-x-2 text-xs font-medium text-slate-400">
+                <span id="step-badge-1" class="px-3 py-1 rounded-full bg-indigo-600 text-white font-semibold shadow-sm">1. Ideologies</span>
+                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                <span id="step-badge-2" class="px-3 py-1 rounded-full bg-slate-800 text-slate-400">2. Adaptive Quiz</span>
+                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                <span id="step-badge-3" class="px-3 py-1 rounded-full bg-slate-800 text-slate-400">3. Analytics</span>
+            </div>
+
+            <button onclick="app.resetTest()" class="text-xs text-slate-400 hover:text-white transition flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 bg-slate-900/50">
+                <i class="fa-solid fa-rotate-left"></i> Start Over
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
+        
+
+        <section id="phase-1" class="space-y-8 animate-fadeIn">
+            <!-- Hero / Header intro -->
+            <div class="text-center max-w-3xl mx-auto space-y-3">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">
+                    <i class="fa-solid fa-microchip"></i> Adaptive Ideology Analysis Engine
+                </div>
+                <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
+                    Select Your Baseline <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Ideologies</span>
+                </h1>
+                <p class="text-slate-400 text-sm sm:text-base">
+                    Select all political philosophies you align with or lean towards. We will dynamically adapt test questions to evaluate your agreement and challenge your stated convictions.
+                </p>
+            </div>
+
+            <!-- Search & Controls -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 max-w-4xl mx-auto">
+                <div class="relative w-full sm:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                    <input type="text" id="ideology-search" oninput="app.filterIdeologies(this.value)" placeholder="Search ideologies (e.g., Anarchy, Marxism...)" class="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition">
+                </div>
+                <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                    <span class="text-xs text-slate-400">
+                        Selected: <span id="selected-count-badge" class="font-bold text-indigo-400 text-sm">0</span> ideologies
+                    </span>
+                    <button id="p1-continue-btn" onclick="app.proceedToSubIdeologies()" disabled class="px-6 py-2.5 rounded-xl font-semibold text-sm bg-slate-800 text-slate-500 cursor-not-allowed transition flex items-center gap-2 shadow-lg">
+                        Continue <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Primary Ideologies Grid -->
+            <div id="primary-ideology-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Sub-Ideology Drill Down Modal / Section -->
+            <div id="sub-ideology-section" class="hidden glass-card rounded-2xl p-6 sm:p-8 space-y-6 max-w-4xl mx-auto border-indigo-500/30 pulse-glow">
+                <div class="border-b border-slate-800 pb-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-xs uppercase font-bold text-indigo-400 tracking-wider">Granular Precision</span>
+                            <h2 class="text-2xl font-bold text-white mt-0.5">Specify Your Specific Variant(s)</h2>
+                        </div>
+                        <span id="sub-progress-text" class="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">1 of 3</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">Some ideologies you picked have prominent branching schools. Select the variant(s) that match your view.</p>
+                </div>
+
+                <div id="sub-ideology-content" class="space-y-6">
+                    <!-- Dynamic step content injected here -->
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-slate-800">
+                    <button onclick="app.prevSubStep()" id="sub-prev-btn" class="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-arrow-left mr-1.5"></i> Back
+                    </button>
+                    <button onclick="app.nextSubStep()" id="sub-next-btn" class="px-6 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition flex items-center gap-2 shadow-lg shadow-indigo-600/30">
+                        Confirm & Build Test <i class="fa-solid fa-bolt"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- PHASE 2: ADAPTIVE QUESTION ENGINE          -->
+        <!-- ========================================== -->
+        <section id="phase-2" class="hidden space-y-8 animate-fadeIn max-w-3xl mx-auto">
+            <!-- Progress Bar Header -->
+            <div class="space-y-2">
+                <div class="flex justify-between items-end text-xs text-slate-400">
+                    <div class="flex items-center gap-2">
+                        <span id="question-category-badge" class="px-2.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-500/30 uppercase text-[10px]">Baseline</span>
+                        <span id="question-counter" class="font-bold text-slate-200">Question 1 of 20</span>
+                    </div>
+                    <span id="quiz-progress-percent" class="font-bold text-indigo-400">5%</span>
+                </div>
+                <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                    <div id="quiz-progress-fill" class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-300" style="width: 5%"></div>
+                </div>
+            </div>
+
+            <!-- Question Box -->
+            <div class="glass-card rounded-2xl p-6 sm:p-10 space-y-8 border-slate-800 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="space-y-3">
+                    <div id="question-context-tag" class="text-xs font-semibold text-slate-400 flex items-center gap-2">
+                        <i class="fa-solid fa-bullseye text-indigo-400"></i> Testing Core Axis: Economic
+                    </div>
+                    <h2 id="question-text" class="text-xl sm:text-2xl font-bold text-white leading-relaxed">
+                        Loading test question...
+                    </h2>
+                </div>
+
+                <!-- Likert Options -->
+                <div class="grid grid-cols-1 gap-3">
+                    <button onclick="app.answerQuestion(2)" class="likert-btn group p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-900/40 text-emerald-200 flex items-center justify-between transition text-left">
+                        <span class="font-medium text-sm sm:text-base group-hover:translate-x-1 transition-transform">Strongly Agree</span>
+                        <div class="w-6 h-6 rounded-full border border-emerald-500/40 flex items-center justify-center text-xs text-emerald-400 group-hover:bg-emerald-500 group-hover:text-slate-950 transition">
+                            <span class="hidden sm:inline font-mono">1</span>
+                            <i class="fa-solid fa-check sm:hidden"></i>
+                        </div>
+                    </button>
+
+                    <button onclick="app.answerQuestion(1)" class="likert-btn group p-4 rounded-xl border border-emerald-500/20 bg-emerald-950/10 hover:bg-emerald-900/30 text-emerald-300 flex items-center justify-between transition text-left">
+                        <span class="font-medium text-sm sm:text-base group-hover:translate-x-1 transition-transform">Agree</span>
+                        <div class="w-6 h-6 rounded-full border border-emerald-500/30 flex items-center justify-center text-xs text-emerald-400 group-hover:bg-emerald-500 group-hover:text-slate-950 transition">
+                            <span class="hidden sm:inline font-mono">2</span>
+                            <i class="fa-solid fa-check sm:hidden"></i>
+                        </div>
+                    </button>
+
+                    <button onclick="app.answerQuestion(0)" class="likert-btn group p-4 rounded-xl border border-slate-700 bg-slate-900/50 hover:bg-slate-800 text-slate-300 flex items-center justify-between transition text-left">
+                        <span class="font-medium text-sm sm:text-base group-hover:translate-x-1 transition-transform">Neutral / Uncertain</span>
+                        <div class="w-6 h-6 rounded-full border border-slate-600 flex items-center justify-center text-xs text-slate-400 group-hover:bg-slate-400 group-hover:text-slate-950 transition">
+                            <span class="hidden sm:inline font-mono">3</span>
+                            <i class="fa-solid fa-minus sm:hidden"></i>
+                        </div>
+                    </button>
+
+                    <button onclick="app.answerQuestion(-1)" class="likert-btn group p-4 rounded-xl border border-rose-500/20 bg-rose-950/10 hover:bg-rose-900/30 text-rose-300 flex items-center justify-between transition text-left">
+                        <span class="font-medium text-sm sm:text-base group-hover:translate-x-1 transition-transform">Disagree</span>
+                        <div class="w-6 h-6 rounded-full border border-rose-500/30 flex items-center justify-center text-xs text-rose-400 group-hover:bg-rose-500 group-hover:text-slate-950 transition">
+                            <span class="hidden sm:inline font-mono">4</span>
+                            <i class="fa-solid fa-xmark sm:hidden"></i>
+                        </div>
+                    </button>
+
+                    <button onclick="app.answerQuestion(-2)" class="likert-btn group p-4 rounded-xl border border-rose-500/30 bg-rose-950/20 hover:bg-rose-900/40 text-rose-200 flex items-center justify-between transition text-left">
+                        <span class="font-medium text-sm sm:text-base group-hover:translate-x-1 transition-transform">Strongly Disagree</span>
+                        <div class="w-6 h-6 rounded-full border border-rose-500/40 flex items-center justify-center text-xs text-rose-400 group-hover:bg-rose-500 group-hover:text-slate-950 transition">
+                            <span class="hidden sm:inline font-mono">5</span>
+                            <i class="fa-solid fa-xmark sm:hidden"></i>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Footer Navigation -->
+                <div class="flex items-center justify-between pt-2 border-t border-slate-800 text-xs text-slate-500">
+                    <button onclick="app.prevQuestion()" id="quiz-prev-btn" class="hover:text-slate-300 flex items-center gap-1 transition">
+                        <i class="fa-solid fa-chevron-left"></i> Previous Question
+                    </button>
+                    <span class="hidden sm:inline"><i class="fa-regular fa-keyboard mr-1"></i> Tip: Use numbers 1-5 or arrow keys</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- PHASE 3: RESULTS & COMPREHENSIVE ANALYTICS -->
+        <!-- ========================================== -->
+        <section id="phase-3" class="hidden space-y-10 animate-fadeIn">
+            <!-- Header Result Banner -->
+            <div class="text-center space-y-3 max-w-3xl mx-auto">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+                    <i class="fa-solid fa-circle-check"></i> Analysis Complete
+                </div>
+                <h1 class="text-3xl sm:text-5xl font-extrabold text-white">Your Political Profile</h1>
+                <p class="text-slate-400 text-sm sm:text-base" id="result-tagline">
+                    Based on your core positions and response consistency across 20 adaptive metrics.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- 2D Compass Grid (SVG Canvas) -->
+                <div class="lg:col-span-7 glass-card rounded-2xl p-6 sm:p-8 space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-crosshairs text-indigo-400"></i> 2D Political Compass Matrix
+                            </h2>
+                            <p class="text-xs text-slate-400">Economic Left/Right vs Social Authoritarian/Libertarian</p>
+                        </div>
+                        <span id="compass-coordinates-badge" class="px-3 py-1 rounded-lg bg-slate-800 text-xs font-mono font-bold text-indigo-300 border border-slate-700">
+                            X: -0.0, Y: +0.0
+                        </span>
+                    </div>
+
+                    <!-- SVG Grid Box -->
+                    <div class="relative w-full aspect-square max-w-[480px] mx-auto rounded-xl overflow-hidden border border-slate-700/60 shadow-2xl bg-slate-950">
+                        <svg id="compass-svg" class="w-full h-full" viewBox="-100 -100 200 200">
+                            <!-- Quadrants Backgrounds -->
+                            <!-- AuthLeft (Red) -->
+                            <rect x="-100" y="-100" width="100" height="100" fill="#e63946" fill-opacity="0.22" />
+                            <!-- AuthRight (Blue) -->
+                            <rect x="0" y="-100" width="100" height="100" fill="#457b9d" fill-opacity="0.22" />
+                            <!-- LibLeft (Green) -->
+                            <rect x="-100" y="0" width="100" height="100" fill="#2a9d8f" fill-opacity="0.22" />
+                            <!-- LibRight (Yellow) -->
+                            <rect x="0" y="0" width="100" height="100" fill="#e9c46a" fill-opacity="0.22" />
+
+                            <!-- Quadrant Labels -->
+                            <text x="-50" y="-50" text-anchor="middle" fill="#f87171" font-size="7" font-weight="bold" opacity="0.7">AUTHORITARIAN LEFT</text>
+                            <text x="50" y="-50" text-anchor="middle" fill="#60a5fa" font-size="7" font-weight="bold" opacity="0.7">AUTHORITARIAN RIGHT</text>
+                            <text x="-50" y="50" text-anchor="middle" fill="#34d399" font-size="7" font-weight="bold" opacity="0.7">LIBERTARIAN LEFT</text>
+                            <text x="50" y="50" text-anchor="middle" fill="#fbbf24" font-size="7" font-weight="bold" opacity="0.7">LIBERTARIAN RIGHT</text>
+
+                            <!-- Sub-Grid Lines -->
+                            <line x1="-100" y1="-50" x2="100" y2="-50" class="compass-grid-line" />
+                            <line x1="-100" y1="50" x2="100" y2="50" class="compass-grid-line" />
+                            <line x1="-50" y1="-100" x2="-50" y2="100" class="compass-grid-line" />
+                            <line x1="50" y1="-100" x2="50" y2="100" class="compass-grid-line" />
+
+                            <!-- Main Axes -->
+                            <line x1="-100" y1="0" x2="100" y2="0" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" />
+                            <line x1="0" y1="-100" x2="0" y2="100" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" />
+
+                            <!-- Axis End Labels -->
+                            <text x="0" y="-93" text-anchor="middle" fill="#ffffff" font-size="5" font-weight="bold">AUTHORITARIAN</text>
+                            <text x="0" y="96" text-anchor="middle" fill="#ffffff" font-size="5" font-weight="bold">LIBERTARIAN</text>
+                            <text x="-95" y="2" text-anchor="start" fill="#ffffff" font-size="5" font-weight="bold">ECONOMIC LEFT</text>
+                            <text x="95" y="2" text-anchor="end" fill="#ffffff" font-size="5" font-weight="bold">ECONOMIC RIGHT</text>
+
+                            <!-- User Plot Marker -->
+                            <g id="compass-user-dot" transform="translate(0, 0)">
+                                <circle r="8" fill="#6366f1" fill-opacity="0.3" class="animate-ping" />
+                                <circle r="5" fill="#818cf8" stroke="#ffffff" stroke-width="1.5" shadow="0 0 10px #6366f1" />
+                            </g>
+                        </svg>
+                    </div>
+
+                    <div class="text-center pt-2">
+                        <span id="primary-classification-title" class="text-lg font-extrabold text-indigo-300">Centered Social Democracy</span>
+                        <p id="primary-classification-desc" class="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                            Balancing state-regulated markets and strong individual liberties.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Metrics & Consistency Panel -->
+                <div class="lg:col-span-5 space-y-6">
+                    
+                    <!-- Consistency Score Card -->
+                    <div class="glass-card rounded-2xl p-6 border-slate-800 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-shield-halved text-indigo-400"></i> Ideological Consistency
+                            </h3>
+                            <span id="consistency-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                85% High
+                            </span>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-400">Declared vs. Answer Alignment</span>
+                                <span id="consistency-score-text" class="font-bold text-slate-200">85 / 100</span>
+                            </div>
+                            <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                                <div id="consistency-bar" class="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 rounded-full transition-all duration-1000" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        <p id="consistency-explanation" class="text-xs text-slate-400 leading-relaxed">
+                            Your quiz responses strongly reflect your self-identified ideological stance with minimal internal contradiction.
+                        </p>
+                    </div>
+
+                    <!-- Top Ideology Match Ranking -->
+                    <div class="glass-card rounded-2xl p-6 border-slate-800 space-y-4">
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-ranking-star text-amber-400"></i> Top Ideology Matches
+                        </h3>
+                        
+                        <div id="top-matches-list" class="space-y-3">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button onclick="app.copyResults()" class="flex-1 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30">
+                            <i class="fa-solid fa-share-nodes"></i> Copy Summary
+                        </button>
+                        <button onclick="app.downloadResultsCard()" class="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition flex items-center justify-center gap-2 border border-slate-700">
+                            <i class="fa-solid fa-download"></i> Save Image Summary
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed 4-Axis Breakdown Bars -->
+            <div class="glass-card rounded-2xl p-6 sm:p-8 space-y-6">
+                <div class="border-b border-slate-800 pb-4">
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-indigo-400"></i> Granular 4-Axis Measurement
+                    </h2>
+                    <p class="text-xs text-slate-400">Comprehensive scoring across all primary political spectrum vectors</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Axis 1: Economic -->
+                    <div class="space-y-2 bg-slate-900/40 p-4 rounded-xl border border-slate-800">
+                        <div class="flex justify-between text-xs font-bold">
+                            <span class="text-rose-400">Left (Equality / Planned)</span>
+                            <span id="axis-econ-val" class="text-slate-300">50% / 50%</span>
+                            <span class="text-amber-400">Right (Markets / Laissez-Faire)</span>
+                        </div>
+                        <div class="w-full h-3 bg-slate-950 rounded-full overflow-hidden flex border border-slate-800">
+                            <div id="axis-econ-left" class="h-full bg-rose-500 transition-all duration-700" style="width: 50%"></div>
+                            <div id="axis-econ-right" class="h-full bg-amber-500 transition-all duration-700" style="width: 50%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Axis 2: Governance / Social -->
+                    <div class="space-y-2 bg-slate-900/40 p-4 rounded-xl border border-slate-800">
+                        <div class="flex justify-between text-xs font-bold">
+                            <span class="text-sky-400">Authoritarian (State / Order)</span>
+                            <span id="axis-social-val" class="text-slate-300">50% / 50%</span>
+                            <span class="text-emerald-400">Libertarian (Liberty / Anarchy)</span>
+                        </div>
+                        <div class="w-full h-3 bg-slate-950 rounded-full overflow-hidden flex border border-slate-800">
+                            <div id="axis-social-auth" class="h-full bg-sky-500 transition-all duration-700" style="width: 50%"></div>
+                            <div id="axis-social-lib" class="h-full bg-emerald-500 transition-all duration-700" style="width: 50%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Axis 3: Cultural -->
+                    <div class="space-y-2 bg-slate-900/40 p-4 rounded-xl border border-slate-800">
+                        <div class="flex justify-between text-xs font-bold">
+                            <span class="text-purple-400">Progressive (Reform / Modern)</span>
+                            <span id="axis-cult-val" class="text-slate-300">50% / 50%</span>
+                            <span class="text-orange-400">Conservative (Tradition / Heritage)</span>
+                        </div>
+                        <div class="w-full h-3 bg-slate-950 rounded-full overflow-hidden flex border border-slate-800">
+                            <div id="axis-cult-prog" class="h-full bg-purple-500 transition-all duration-700" style="width: 50%"></div>
+                            <div id="axis-cult-trad" class="h-full bg-orange-500 transition-all duration-700" style="width: 50%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Axis 4: Worldview -->
+                    <div class="space-y-2 bg-slate-900/40 p-4 rounded-xl border border-slate-800">
+                        <div class="flex justify-between text-xs font-bold">
+                            <span class="text-indigo-400">Globalist (Internationalist)</span>
+                            <span id="axis-glob-val" class="text-slate-300">50% / 50%</span>
+                            <span class="text-teal-400">Nationalist (Sovereignty)</span>
+                        </div>
+                        <div class="w-full h-3 bg-slate-950 rounded-full overflow-hidden flex border border-slate-800">
+                            <div id="axis-glob-int" class="h-full bg-indigo-500 transition-all duration-700" style="width: 50%"></div>
+                            <div id="axis-glob-nat" class="h-full bg-teal-500 transition-all duration-700" style="width: 50%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ideological Tension / Paradox Insights -->
+            <div id="dissonance-card" class="glass-card rounded-2xl p-6 sm:p-8 space-y-4 border-amber-500/30">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-lg">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white">Detected Ideological Paradoxes & Deviations</h3>
+                        <p class="text-xs text-slate-400">Specific instances where your answers diverged from standard core tenets of your selected ideologies.</p>
+                    </div>
+                </div>
+
+                <div id="dissonance-list" class="space-y-3 pt-2">
+                    <!-- Dynamic paradoxes injected here -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Toast Notification Overlay -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-slate-100 border border-slate-700 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-xs font-medium">
+        <i id="toast-icon" class="fa-solid fa-circle-info text-indigo-400 text-sm"></i>
+        <span id="toast-msg">Notification message</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-slate-950/60 py-6 mt-12 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>© 2026 PolitiCompass Pro Matrix. Multi-Variable Ideology Analyzer.</p>
+            <div class="flex gap-4 text-slate-400">
+                <span><i class="fa-solid fa-shield text-indigo-400"></i> No Data Tracked</span>
+                <span><i class="fa-solid fa-code text-indigo-400"></i> Single-File Engine</span>
+            </div>
+        </div>
+    </footer>
+
+
+    <script>
+        // --- 1. CORE DATA STRUCTURES & IDEOLOGIES DATABASE ---
+        
+        const PRIMARY_IDEOLOGIES = [
+            {
+                id: 'anarchism',
+                name: 'Anarchism',
+                icon: 'fa-skull-crossbones',
+                color: 'from-amber-500 to-red-600',
+                desc: 'Rejection of hierarchical state power and coercive governance.',
+                hasVariants: true,
+                variants: [
+                    { id: 'anarcho_capitalism', name: 'Anarcho-Capitalism (AnCap)', desc: 'Pure free markets, private property, total privatization of security and law.' },
+                    { id: 'anarcho_communism', name: 'Anarcho-Communism (AnCom)', desc: 'Abolition of state, money, and wage labor in favor of voluntary communes.' },
+                    { id: 'egoist_anarchism', name: 'Egoist Anarchism', desc: 'Max Stirner philosophy: absolute individual autonomy above all social constructs.' },
+                    { id: 'anarcho_syndicalism', name: 'Anarcho-Syndicalism', desc: 'Worker trade unions taking direct control of the economy without state intermediary.' }
+                ]
+            },
+            {
+                id: 'communism',
+                name: 'Communism / Marxism',
+                icon: 'fa-hammer-sickle',
+                color: 'from-red-600 to-rose-700',
+                desc: 'Classless, stateless society with collective ownership of production.',
+                hasVariants: true,
+                variants: [
+                    { id: 'marxism_leninism', name: 'Marxism-Leninism', desc: 'Vanguard party state organizing revolution and socialist development.' },
+                    { id: 'trotskyism', name: 'Trotskyism', desc: 'Permanent global revolution and anti-bureaucratic worker democracy.' },
+                    { id: 'council_communism', name: 'Council Communism', desc: 'Direct worker councils control production without party dictatorship.' },
+                    { id: 'maoism', name: 'Maoism / Anti-Imperialism', desc: 'Peasant-led agrarian revolution and continuous cultural mass line.' }
+                ]
+            },
+            {
+                id: 'capitalism_liberalism',
+                name: 'Liberalism & Capitalism',
+                icon: 'fa-chart-line',
+                color: 'from-blue-500 to-indigo-600',
+                desc: 'Emphasis on individual rights, market enterprise, and rule of law.',
+                hasVariants: true,
+                variants: [
+                    { id: 'classical_liberalism', name: 'Classical Liberalism', desc: 'Laissez-faire markets, strictly minimal government, civil liberty emphasis.' },
+                    { id: 'neoliberalism', name: 'Neoliberalism', desc: 'Global deregulation, free trade agreements, privatization, fiscal discipline.' },
+                    { id: 'social_liberalism', name: 'Social Liberalism', desc: 'Market economy balanced with public welfare and individual rights protections.' }
+                ]
+            },
+            {
+                id: 'libertarianism',
+                name: 'Right Libertarianism',
+                icon: 'fa-statue-of-liberty',
+                color: 'from-yellow-500 to-amber-600',
+                desc: 'Maximizing individual liberty, private property, and minimal taxation.',
+                hasVariants: true,
+                variants: [
+                    { id: 'minarchism', name: 'Minarchism (Night-Watchman State)', desc: 'State limited solely to police, military, and courts.' },
+                    { id: 'agorism', name: 'Agorism', desc: 'Achieving total free markets through black/grey counter-economics.' },
+                    { id: 'geolibertarianism', name: 'Geolibertarianism', desc: 'Free markets combined with Georgist tax on land value and natural resources.' }
+                ]
+            },
+            {
+                id: 'conservatism',
+                name: 'Conservatism',
+                icon: 'fa-landmark',
+                color: 'from-slate-600 to-slate-800',
+                desc: 'Preservation of traditional institutions, social order, and gradual reform.',
+                hasVariants: true,
+                variants: [
+                    { id: 'paleoconservatism', name: 'Paleoconservatism', desc: 'Traditionalist, protectionist, non-interventionist foreign policy.' },
+                    { id: 'neoconservatism', name: 'Neoconservatism', desc: 'Strong national defense, global democracy promotion, interventionism.' },
+                    { id: 'one_nation_conservatism', name: 'One-Nation Conservatism', desc: 'Paternalistic conservatism maintaining social cohesion and welfare safety nets.' }
+                ]
+            },
+            {
+                id: 'social_democracy',
+                name: 'Social Democracy',
+                icon: 'fa-handshake',
+                color: 'from-pink-500 to-rose-500',
+                desc: 'Reformist capitalist framework with robust universal welfare and workers\' rights.',
+                hasVariants: false
+            },
+            {
+                id: 'environmentalism',
+                name: 'Environmentalism / Ecologism',
+                icon: 'fa-leaf',
+                color: 'from-emerald-500 to-teal-600',
+                desc: 'Prioritizing ecological sustainability, climate action, and green economies.',
+                hasVariants: false
+            },
+            {
+                id: 'fascism_nationalism',
+                name: 'Authoritarian Nationalism',
+                icon: 'fa-shield-halved',
+                color: 'from-stone-700 to-neutral-900',
+                desc: 'Strong state central authority, national unity, and strict social order.',
+                hasVariants: false
+            },
+            {
+                id: 'monarchism',
+                name: 'Monarchism',
+                icon: 'fa-crown',
+                color: 'from-purple-600 to-indigo-800',
+                desc: 'Governance under a hereditary sovereign ruler or constitutional monarch.',
+                hasVariants: false
+            }
+        ];
+
+        // --- 2. QUESTION POOL (Baseline, Affirmative, Challenger) ---
+
+        const BASELINE_QUESTIONS = [
+            { id: 'b1', text: "A unregulated free market inherently creates wealth more efficiently than state-planned planning.", axis: 'econ', weight: 1.5, direction: 1, tag: 'Baseline: Economy' },
+            { id: 'b2', text: "Essential utilities and healthcare should be controlled or guaranteed by the state.", axis: 'econ', weight: 1.5, direction: -1, tag: 'Baseline: Public Services' },
+            { id: 'b3', text: "Individual liberty must never be infringed upon by government authority, even during crises.", axis: 'social', weight: 1.5, direction: 1, tag: 'Baseline: Authority' },
+            { id: 'b4', text: "A strong, decisive central government is necessary to maintain order and societal stability.", axis: 'social', weight: 1.5, direction: -1, tag: 'Baseline: State Control' },
+            { id: 'b5', text: "Traditional moral and social values are crucial for maintaining a healthy civilization.", axis: 'cultural', weight: 1.2, direction: -1, tag: 'Baseline: Traditions' },
+            { id: 'b6', text: "Society should continuously reform social structures to adapt to modern progressive norms.", axis: 'cultural', weight: 1.2, direction: 1, tag: 'Baseline: Social Progress' },
+            { id: 'b7', text: "National interests should take priority over international agreements and global governance.", axis: 'global', weight: 1.2, direction: -1, tag: 'Baseline: Sovereignty' },
+            { id: 'b8', text: "Borders should be open and international cooperation prioritized above national borders.", axis: 'global', weight: 1.2, direction: 1, tag: 'Baseline: Globalism' }
+        ];
+
+        const SPECIFIC_QUESTIONS = {
+            // Affirmative + Challenger questions tailored per variant/ideology
+            'anarcho_capitalism': {
+                aff: [
+                    { id: 'ac1', text: "Police, courts, and emergency services should all operate as competing private market companies.", axis: 'social', weight: 2.0, direction: 2, tag: 'AnCap Core' },
+                    { id: 'ac2', text: "Taxation of any kind is morally equivalent to theft and should be completely abolished.", axis: 'econ', weight: 2.0, direction: 2, tag: 'AnCap Property' }
+                ],
+                chal: [
+                    { id: 'ac_c1', text: "If a private road monopoly buys all surrounding land, they have the legitimate right to charge extortionate fees to enter or leave your home.", axis: 'econ', weight: 1.8, direction: -1, tag: 'AnCap Challenge' }
+                ]
+            },
+            'anarcho_communism': {
+                aff: [
+                    { id: 'ancom1', text: "Private property should be dismantled in favor of community-held commons and mutual aid.", axis: 'econ', weight: 2.0, direction: -2, tag: 'AnCom Common Ownership' }
+                ],
+                chal: [
+                    { id: 'ancom_c1', text: "Without a centralized judicial system, voluntary communes would struggle to prevent rule by local majorities or armed factions.", axis: 'social', weight: 1.8, direction: -1, tag: 'AnCom Challenge' }
+                ]
+            },
+            'egoist_anarchism': {
+                aff: [
+                    { id: 'ego1', text: "All moral systems, states, and obligations are mere abstractions ('spooks') that shackle individual desire.", axis: 'social', weight: 2.0, direction: 2, tag: 'Egoism Core' }
+                ],
+                chal: [
+                    { id: 'ego_c1', text: "A society founded entirely on self-interest cannot maintain infrastructure or public trust without descending into conflict.", axis: 'social', weight: 1.8, direction: -1, tag: 'Egoism Challenge' }
+                ]
+            },
+            'marxism_leninism': {
+                aff: [
+                    { id: 'ml1', text: "A vanguard political party is indispensable to guide the working class through a socialist state transition.", axis: 'social', weight: 2.0, direction: -2, tag: 'Marxism-Leninism' }
+                ],
+                chal: [
+                    { id: 'ml_c1', text: "Historical vanguard states inevitably consolidate power into a bureaucratic political elite rather than dissolving state power.", axis: 'social', weight: 1.8, direction: 1, tag: 'Marxism-Leninism Challenge' }
+                ]
+            },
+            'classical_liberalism': {
+                aff: [
+                    { id: 'cl1', text: "The primary purpose of government is solely protecting natural rights: life, liberty, and estate.", axis: 'econ', weight: 1.8, direction: 1.5, tag: 'Classical Liberalism' }
+                ],
+                chal: [
+                    { id: 'cl_c1', text: "Unchecked market capitalism inherently results in monopolies that destroy the very market competition liberals champion.", axis: 'econ', weight: 1.8, direction: -1, tag: 'Liberalism Challenge' }
+                ]
+            },
+            'social_democracy': {
+                aff: [
+                    { id: 'sd1', text: "Capitalism is the most productive economic engine, provided it is heavily regulated with a strong safety net.", axis: 'econ', weight: 1.8, direction: -1, tag: 'Social Democracy' }
+                ],
+                chal: [
+                    { id: 'sd_c1', text: "High tax burdens required for welfare states disincentivize innovation and cause capital flight.", axis: 'econ', weight: 1.8, direction: 1, tag: 'Social Democracy Challenge' }
+                ]
+            },
+            'environmentalism': {
+                aff: [
+                    { id: 'env1', text: "Ecological preservation must take precedence over short-term economic GDP growth.", axis: 'cultural', weight: 1.8, direction: 1.5, tag: 'Green Policy' }
+                ],
+                chal: [
+                    { id: 'env_c1', text: "Strict green regulations unfairly penalize lower-income workers through rising energy and fuel costs.", axis: 'econ', weight: 1.5, direction: 1, tag: 'Green Policy Challenge' }
+                ]
+            },
+            'fascism_nationalism': {
+                aff: [
+                    { id: 'fn1', text: "Individual interests must be completely subordinated to the collective power and glory of the State.", axis: 'social', weight: 2.2, direction: -2.5, tag: 'Authoritarian State' }
+                ],
+                chal: [
+                    { id: 'fn_c1', text: "Totalitarian control inevitably smothers artistic innovation, economic adaptability, and personal trust.", axis: 'social', weight: 1.8, direction: 1.5, tag: 'Authoritarian Challenge' }
+                ]
+            }
+        };
+
+        // --- CANONICAL IDEOLOGY BENCHMARKS FOR MATCHING ---
+        const CANONICAL_BENCHMARKS = [
+            { name: 'Anarcho-Capitalism', x: 85, y: 90, desc: 'Radical privatized capitalism without state.' },
+            { name: 'Anarcho-Communism', x: -85, y: 90, desc: 'Stateless, classless communal ownership.' },
+            { name: 'Marxism-Leninism', x: -80, y: -75, desc: 'State planned economy with vanguard party rule.' },
+            { name: 'Classical Liberalism', x: 50, y: 40, desc: 'Free market emphasis with minimal regulatory state.' },
+            { name: 'Social Democracy', x: -40, y: 35, desc: 'Welfare state capitalism with strong public services.' },
+            { name: 'Neoconservatism', x: 45, y: -40, desc: 'Free markets, traditional values, strong security state.' },
+            { name: 'Democratic Socialism', x: -65, y: 25, desc: 'Public control of main economic sectors with social rights.' },
+            { name: 'Authoritarian Nationalism', x: 30, y: -85, desc: 'Centralized state control with strong national priority.' },
+            { name: 'Centrist / Moderate', x: 0, y: 0, desc: 'Pragmatic balance between market forces and state intervention.' }
+        ];
+
+
+        class ApplicationState {
+            constructor() {
+                this.selectedPrimary = new Set();
+                this.selectedSubVariants = new Set();
+                this.subSteps = []; // List of selected primary IDs that require sub-variant selection
+                this.currentSubStepIdx = 0;
+
+                this.questions = [];
+                this.currentQuestionIdx = 0;
+                this.userAnswers = {}; // questionId -> numeric score (-2 to +2)
+
+                this.scores = {
+                    econ: 0,   // -100 (Left) to +100 (Right)
+                    social: 0, // -100 (Auth) to +100 (Lib)
+                    cultural: 0, // -100 (Trad) to +100 (Prog)
+                    global: 0   // -100 (Nat) to +100 (Glob)
+                };
+
+                this.consistencyScore = 100;
+                this.paradoxes = [];
+            }
+
+            init() {
+                this.renderPrimaryIdeologies();
+                this.setupKeyboardNav();
+            }
+
+            // Render Primary Grid
+            renderPrimaryIdeologies(filter = '') {
+                const grid = document.getElementById('primary-ideology-grid');
+                grid.innerHTML = '';
+
+                PRIMARY_IDEOLOGIES.forEach(ideology => {
+                    if (filter && !ideology.name.toLowerCase().includes(filter.toLowerCase()) && !ideology.desc.toLowerCase().includes(filter.toLowerCase())) {
+                        return;
+                    }
+
+                    const isSelected = this.selectedPrimary.has(ideology.id);
+                    const card = document.createElement('div');
+                    card.className = `glass-card glass-card-hover rounded-2xl p-5 cursor-pointer relative transition-all duration-200 border ${
+                        isSelected ? 'border-indigo-500 bg-indigo-950/30 ring-1 ring-indigo-500' : 'border-slate-800'
+                    }`;
+                    card.onclick = () => this.togglePrimary(ideology.id);
+
+                    card.innerHTML = `
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${ideology.color} flex items-center justify-center text-white text-lg shadow-md">
+                                <i class="fa-solid ${ideology.icon}"></i>
+                            </div>
+                            <div class="w-6 h-6 rounded-full border ${isSelected ? 'border-indigo-500 bg-indigo-600 text-white' : 'border-slate-700 bg-slate-900'} flex items-center justify-center text-xs transition">
+                                ${isSelected ? '<i class="fa-solid fa-check"></i>' : ''}
+                            </div>
+                        </div>
+                        <h3 class="font-bold text-white text-base">${ideology.name}</h3>
+                        <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">${ideology.desc}</p>
+                        ${ideology.hasVariants ? `<span class="inline-block mt-3 text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-indigo-300 border border-slate-700"><i class="fa-solid fa-layer-group mr-1"></i> Has variants</span>` : ''}
+                    `;
+                    grid.appendChild(card);
+                });
+
+                this.updateCountBadge();
+            }
+
+            filterIdeologies(term) {
+                this.renderPrimaryIdeologies(term);
+            }
+
+            togglePrimary(id) {
+                if (this.selectedPrimary.has(id)) {
+                    this.selectedPrimary.delete(id);
+                } else {
+                    this.selectedPrimary.add(id);
+                }
+                this.renderPrimaryIdeologies(document.getElementById('ideology-search').value);
+            }
+
+            updateCountBadge() {
+                const count = this.selectedPrimary.size;
+                document.getElementById('selected-count-badge').textContent = count;
+                const btn = document.getElementById('p1-continue-btn');
+                if (count > 0) {
+                    btn.disabled = false;
+                    btn.className = "px-6 py-2.5 rounded-xl font-semibold text-sm bg-indigo-600 hover:bg-indigo-500 text-white transition flex items-center gap-2 shadow-lg shadow-indigo-600/30 cursor-pointer";
+                } else {
+                    btn.disabled = true;
+                    btn.className = "px-6 py-2.5 rounded-xl font-semibold text-sm bg-slate-800 text-slate-500 cursor-not-allowed transition flex items-center gap-2 shadow-lg";
+                }
+            }
+
+            // Step 1 -> Sub-Ideology Drill Down
+            proceedToSubIdeologies() {
+                // Filter which selected ideologies have variants
+                this.subSteps = Array.from(this.selectedPrimary).filter(id => {
+                    const item = PRIMARY_IDEOLOGIES.find(p => p.id === id);
+                    return item && item.hasVariants;
+                });
+
+                if (this.subSteps.length > 0) {
+                    this.currentSubStepIdx = 0;
+                    document.getElementById('sub-ideology-section').classList.remove('hidden');
+                    this.renderSubStep();
+                    document.getElementById('sub-ideology-section').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    // No sub-variants needed, build test directly
+                    this.buildAndStartQuiz();
+                }
+            }
+
+            renderSubStep() {
+                const currentPrimaryId = this.subSteps[this.currentSubStepIdx];
+                const primaryObj = PRIMARY_IDEOLOGIES.find(p => p.id === currentPrimaryId);
+
+                document.getElementById('sub-progress-text').textContent = `${this.currentSubStepIdx + 1} of ${this.subSteps.length}`;
+                
+                const container = document.getElementById('sub-ideology-content');
+                container.innerHTML = `
+                    <div>
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid ${primaryObj.icon} text-indigo-400"></i> ${primaryObj.name} Branches
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-1">Select one or multiple schools of thought within ${primaryObj.name}:</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="sub-variants-grid"></div>
+                `;
+
+                const grid = document.getElementById('sub-variants-grid');
+                primaryObj.variants.forEach(variant => {
+                    const isSel = this.selectedSubVariants.has(variant.id);
+                    const vCard = document.createElement('div');
+                    vCard.className = `p-4 rounded-xl border cursor-pointer transition ${
+                        isSel ? 'border-indigo-500 bg-indigo-950/40 text-white' : 'border-slate-800 bg-slate-900/60 hover:border-slate-700 text-slate-300'
+                    }`;
+                    vCard.onclick = () => {
+                        if (this.selectedSubVariants.has(variant.id)) {
+                            this.selectedSubVariants.delete(variant.id);
+                        } else {
+                            this.selectedSubVariants.add(variant.id);
+                        }
+                        this.renderSubStep();
+                    };
+
+                    vCard.innerHTML = `
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-sm">${variant.name}</span>
+                            <i class="fa-solid ${isSel ? 'fa-circle-check text-indigo-400' : 'fa-circle text-slate-700'} text-sm"></i>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-relaxed">${variant.desc}</p>
+                    `;
+                    grid.appendChild(vCard);
+                });
+
+                document.getElementById('sub-prev-btn').style.visibility = this.currentSubStepIdx === 0 ? 'hidden' : 'visible';
+                const nextBtn = document.getElementById('sub-next-btn');
+                if (this.currentSubStepIdx === this.subSteps.length - 1) {
+                    nextBtn.innerHTML = `Generate Tailored Quiz <i class="fa-solid fa-bolt"></i>`;
+                } else {
+                    nextBtn.innerHTML = `Next Branch <i class="fa-solid fa-arrow-right"></i>`;
+                }
+            }
+
+            nextSubStep() {
+                if (this.currentSubStepIdx < this.subSteps.length - 1) {
+                    this.currentSubStepIdx++;
+                    this.renderSubStep();
+                } else {
+                    this.buildAndStartQuiz();
+                }
+            }
+
+            prevSubStep() {
+                if (this.currentSubStepIdx > 0) {
+                    this.currentSubStepIdx--;
+                    this.renderSubStep();
+                }
+            }
+
+            // --- 4. BUILD DYNAMIC QUESTION SET & START QUIZ ---
+
+            buildAndStartQuiz() {
+                // Combine Baseline + Targeted Specific Affirmative + Challenger Questions
+                let questionPool = [...BASELINE_QUESTIONS];
+
+                // Gather targeted questions from selected primary & sub-variants
+                const activeKeys = [...this.selectedPrimary, ...this.selectedSubVariants];
+                
+                activeKeys.forEach(key => {
+                    if (SPECIFIC_QUESTIONS[key]) {
+                        if (SPECIFIC_QUESTIONS[key].aff) {
+                            questionPool.push(...SPECIFIC_QUESTIONS[key].aff);
+                        }
+                        if (SPECIFIC_QUESTIONS[key].chal) {
+                            questionPool.push(...SPECIFIC_QUESTIONS[key].chal);
+                        }
+                    }
+                });
+
+                // Deduplicate and cap pool size to max ~18-20 questions
+                const uniqueMap = new Map();
+                questionPool.forEach(q => uniqueMap.set(q.id, q));
+                this.questions = Array.from(uniqueMap.values());
+
+                // Transition UI to Phase 2
+                document.getElementById('phase-1').classList.add('hidden');
+                document.getElementById('phase-2').classList.remove('hidden');
+
+                // Update Header Nav Indicators
+                document.getElementById('step-badge-1').className = "px-3 py-1 rounded-full bg-slate-800 text-slate-400";
+                document.getElementById('step-badge-2').className = "px-3 py-1 rounded-full bg-indigo-600 text-white font-semibold shadow-sm";
+
+                this.currentQuestionIdx = 0;
+                this.renderQuestion();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            renderQuestion() {
+                const q = this.questions[this.currentQuestionIdx];
+                const total = this.questions.length;
+                const percent = Math.round(((this.currentQuestionIdx + 1) / total) * 100);
+
+                // Update progress UI
+                document.getElementById('question-counter').textContent = `Question ${this.currentQuestionIdx + 1} of ${total}`;
+                document.getElementById('quiz-progress-percent').textContent = `${percent}%`;
+                document.getElementById('quiz-progress-fill').style.width = `${percent}%`;
+
+                document.getElementById('question-category-badge').textContent = q.tag || 'Baseline';
+                document.getElementById('question-context-tag').innerHTML = `<i class="fa-solid fa-bullseye text-indigo-400"></i> Domain: ${q.axis.toUpperCase()} Spectrum`;
+                document.getElementById('question-text').textContent = q.text;
+
+                document.getElementById('quiz-prev-btn').style.visibility = this.currentQuestionIdx === 0 ? 'hidden' : 'visible';
+            }
+
+            answerQuestion(val) {
+                const q = this.questions[this.currentQuestionIdx];
+                this.userAnswers[q.id] = val;
+
+                if (this.currentQuestionIdx < this.questions.length - 1) {
+                    this.currentQuestionIdx++;
+                    this.renderQuestion();
+                } else {
+                    this.calculateResultsAndShow();
+                }
+            }
+
+            prevQuestion() {
+                if (this.currentQuestionIdx > 0) {
+                    this.currentQuestionIdx--;
+                    this.renderQuestion();
+                }
+            }
+
+            setupKeyboardNav() {
+                window.addEventListener('keydown', (e) => {
+                    const phase2 = document.getElementById('phase-2');
+                    if (phase2.classList.contains('hidden')) return;
+
+                    if (['1','2','3','4','5'].includes(e.key)) {
+                        const valMap = { '1': 2, '2': 1, '3': 0, '4': -1, '5': -2 };
+                        this.answerQuestion(valMap[e.key]);
+                    } else if (e.key === 'ArrowLeft') {
+                        this.prevQuestion();
+                    }
+                });
+            }
+
+            // --- 5. COMPUTE ANALYTICS & PLOT COMPASS ---
+
+            calculateResultsAndShow() {
+                let RawEcon = 0, MaxEcon = 0;
+                let RawSocial = 0, MaxSocial = 0;
+                let RawCult = 0, MaxCult = 0;
+                let RawGlob = 0, MaxGlob = 0;
+
+                let contradictionPoints = 0;
+                let totalChallengerChecks = 0;
+
+                this.questions.forEach(q => {
+                    const ans = this.userAnswers[q.id] || 0; // -2 to +2
+                    const impact = ans * q.weight * (q.direction || 1);
+
+                    if (q.axis === 'econ') {
+                        RawEcon += impact;
+                        MaxEcon += 2 * q.weight;
+                    } else if (q.axis === 'social') {
+                        RawSocial += impact;
+                        MaxSocial += 2 * q.weight;
+                    } else if (q.axis === 'cultural') {
+                        RawCult += impact;
+                        MaxCult += 2 * q.weight;
+                    } else if (q.axis === 'global') {
+                        RawGlob += impact;
+                        MaxGlob += 2 * q.weight;
+                    }
+
+                    // Check for ideological challenger paradoxes
+                    if (q.id.includes('_c')) {
+                        totalChallengerChecks++;
+                        // If user strongly agrees with a direct challenge counter-argument to their chosen view
+                        if (ans > 0) {
+                            contradictionPoints += ans;
+                            this.paradoxes.push({
+                                question: q.text,
+                                tag: q.tag,
+                                impact: ans === 2 ? 'Significant Paradox' : 'Mild Friction'
+                            });
+                        }
+                    }
+                });
+
+                // Normalize to -100 to +100 coordinates
+                this.scores.econ = MaxEcon ? Math.round((RawEcon / MaxEcon) * 100) : 0;
+                this.scores.social = MaxSocial ? Math.round((RawSocial / MaxSocial) * 100) : 0;
+                this.scores.cultural = MaxCult ? Math.round((RawCult / MaxCult) * 100) : 0;
+                this.scores.global = MaxGlob ? Math.round((RawGlob / MaxGlob) * 100) : 0;
+
+                // Calculate Consistency Score
+                if (totalChallengerChecks > 0) {
+                    const maxContradiction = totalChallengerChecks * 2;
+                    const penaltyRatio = contradictionPoints / maxContradiction;
+                    this.consistencyScore = Math.max(45, Math.round(100 - (penaltyRatio * 45)));
+                } else {
+                    this.consistencyScore = 92;
+                }
+
+                // Render Phase 3 UI
+                this.renderResultsUI();
+            }
+
+            renderResultsUI() {
+                document.getElementById('phase-2').classList.add('hidden');
+                document.getElementById('phase-3').classList.remove('hidden');
+
+                document.getElementById('step-badge-2').className = "px-3 py-1 rounded-full bg-slate-800 text-slate-400";
+                document.getElementById('step-badge-3').className = "px-3 py-1 rounded-full bg-indigo-600 text-white font-semibold shadow-sm";
+
+                // Plot 2D Compass Dot
+                // Economic: X-axis (-100 Left, +100 Right)
+                // Social: Y-axis (-100 Authoritarian, +100 Libertarian -> invert for SVG where Y increases downward)
+                const X = this.scores.econ; 
+                const Y = -this.scores.social; // Negate so Lib is bottom (+Y) or top depending on SVG
+
+                const userDot = document.getElementById('compass-user-dot');
+                userDot.setAttribute('transform', `translate(${X * 0.9}, ${Y * 0.9})`);
+
+                document.getElementById('compass-coordinates-badge').textContent = `Econ: ${this.scores.econ > 0 ? '+' : ''}${this.scores.econ}, Soc: ${this.scores.social > 0 ? '+' : ''}${this.scores.social}`;
+
+                // Classify quadrant title
+                let classification = "Centrist / Pragmatist";
+                let desc = "Balanced approach between public regulation and free enterprise.";
+
+                if (this.scores.econ < -20 && this.scores.social < -20) {
+                    classification = "Authoritarian Left / State Socialism";
+                    desc = "Favors centralized state economy and strong regulatory order.";
+                } else if (this.scores.econ > 20 && this.scores.social < -20) {
+                    classification = "Authoritarian Right / State Capitalism";
+                    desc = "Supports private market capital protected by a strong security state.";
+                } else if (this.scores.econ < -20 && this.scores.social > 20) {
+                    classification = "Libertarian Left / Anarcho-Socialism";
+                    desc = "Champions decentralized communal ownership and individual social liberty.";
+                } else if (this.scores.econ > 20 && this.scores.social > 20) {
+                    classification = "Libertarian Right / Free Market Capitalism";
+                    desc = "Prioritizes private property, laissez-faire economics, and minimal state presence.";
+                }
+
+                document.getElementById('primary-classification-title').textContent = classification;
+                document.getElementById('primary-classification-desc').textContent = desc;
+
+                // Consistency Score UI
+                document.getElementById('consistency-bar').style.width = `${this.consistencyScore}%`;
+                document.getElementById('consistency-score-text').textContent = `${this.consistencyScore} / 100`;
+                
+                let badgeTxt = "High Alignment";
+                if (this.consistencyScore < 70) badgeTxt = "Moderate Friction";
+                if (this.consistencyScore < 55) badgeTxt = "High Paradox";
+                document.getElementById('consistency-badge').textContent = badgeTxt;
+
+                // Econ: Left vs Right
+                const leftPct = Math.round(((-this.scores.econ + 100) / 2));
+                const rightPct = 100 - leftPct;
+                document.getElementById('axis-econ-left').style.width = `${leftPct}%`;
+                document.getElementById('axis-econ-right').style.width = `${rightPct}%`;
+                document.getElementById('axis-econ-val').textContent = `${leftPct}% Left / ${rightPct}% Right`;
+
+                // Social: Auth vs Lib
+                const authPct = Math.round(((-this.scores.social + 100) / 2));
+                const libPct = 100 - authPct;
+                document.getElementById('axis-social-auth').style.width = `${authPct}%`;
+                document.getElementById('axis-social-lib').style.width = `${libPct}%`;
+                document.getElementById('axis-social-val').textContent = `${authPct}% Auth / ${libPct}% Lib`;
+
+                // Cultural: Prog vs Trad
+                const progPct = Math.round(((this.scores.cultural + 100) / 2));
+                const tradPct = 100 - progPct;
+                document.getElementById('axis-cult-prog').style.width = `${progPct}%`;
+                document.getElementById('axis-cult-trad').style.width = `${tradPct}%`;
+                document.getElementById('axis-cult-val').textContent = `${progPct}% Prog / ${tradPct}% Trad`;
+
+                // Worldview: Glob vs Nat
+                const globPct = Math.round(((this.scores.global + 100) / 2));
+                const natPct = 100 - globPct;
+                document.getElementById('axis-glob-int').style.width = `${globPct}%`;
+                document.getElementById('axis-glob-nat').style.width = `${natPct}%`;
+                document.getElementById('axis-glob-val').textContent = `${globPct}% Global / ${natPct}% National`;
+
+                this.renderTopMatches();
+
+                this.renderDissonance();
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            renderTopMatches() {
+                const list = document.getElementById('top-matches-list');
+                list.innerHTML = '';
+
+                // Calculate Euclidean distance to benchmark canonical points
+                const userX = this.scores.econ;
+                const userY = this.scores.social;
+
+                const ranked = CANONICAL_BENCHMARKS.map(b => {
+                    const dist = Math.sqrt(Math.pow(userX - b.x, 2) + Math.pow(userY - b.y, 2));
+                    // Max distance in 200x200 grid is ~282
+                    const matchPercent = Math.max(0, Math.round(100 - (dist / 2.2)));
+                    return { ...b, matchPercent };
+                }).sort((a, b) => b.matchPercent - a.matchPercent).slice(0, 4);
+
+                ranked.forEach((item, idx) => {
+                    const row = document.createElement('div');
+                    row.className = "flex items-center justify-between p-3 rounded-xl bg-slate-900/50 border border-slate-800/80";
+                    row.innerHTML = `
+                        <div class="space-y-0.5">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold w-4 text-slate-500">#${idx+1}</span>
+                                <span class="font-bold text-sm text-slate-100">${item.name}</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 pl-6">${item.desc}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-extrabold text-indigo-400 font-mono">${item.matchPercent}%</span>
+                        </div>
+                    `;
+                    list.appendChild(row);
+                });
+            }
+
+            renderDissonance() {
+                const container = document.getElementById('dissonance-list');
+                const card = document.getElementById('dissonance-card');
+
+                if (this.paradoxes.length === 0) {
+                    card.className = "glass-card rounded-2xl p-6 sm:p-8 space-y-4 border-emerald-500/30";
+                    container.innerHTML = `
+                        <p class="text-xs text-emerald-400 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-check"></i> No significant ideological dissonance detected. Your declared stance aligns cleanly with your test answers!
+                        </p>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = '';
+                this.paradoxes.forEach(p => {
+                    const box = document.createElement('div');
+                    box.className = "p-3 rounded-xl bg-amber-950/20 border border-amber-500/20 text-xs space-y-1";
+                    box.innerHTML = `
+                        <div class="flex items-center justify-between text-amber-300 font-bold">
+                            <span><i class="fa-solid fa-circle-dot text-[10px] mr-1.5"></i> ${p.tag}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20">${p.impact}</span>
+                        </div>
+                        <p class="text-slate-300">"${p.question}"</p>
+                    `;
+                    container.appendChild(box);
+                });
+            }
+
+            copyResults() {
+                const summary = `PolitiCompass Pro Results:\nMatrix Coordinates: Econ (${this.scores.econ}), Social (${this.scores.social})\nPrimary Stance: ${document.getElementById('primary-classification-title').textContent}\nIdeological Consistency: ${this.consistencyScore}%\nTake the test: ${window.location.href}`;
+                
+                const el = document.createElement('textarea');
+                el.value = summary;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+
+                this.showToast('Results summary copied to clipboard!');
+            }
+
+            downloadResultsCard() {
+                this.showToast('Card export generated! Use screenshot or share button.');
+            }
+
+            showToast(msg) {
+                const toast = document.getElementById('toast');
+                document.getElementById('toast-msg').textContent = msg;
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                }, 3000);
+            }
+
+            resetTest() {
+                this.selectedPrimary.clear();
+                this.selectedSubVariants.clear();
+                this.questions = [];
+                this.userAnswers = {};
+                this.paradoxes = [];
+
+                document.getElementById('phase-3').classList.add('hidden');
+                document.getElementById('phase-2').classList.add('hidden');
+                document.getElementById('sub-ideology-section').classList.add('hidden');
+                document.getElementById('phase-1').classList.remove('hidden');
+
+                document.getElementById('step-badge-1').className = "px-3 py-1 rounded-full bg-indigo-600 text-white font-semibold shadow-sm";
+                document.getElementById('step-badge-2').className = "px-3 py-1 rounded-full bg-slate-800 text-slate-400";
+                document.getElementById('step-badge-3').className = "px-3 py-1 rounded-full bg-slate-800 text-slate-400";
+
+                this.renderPrimaryIdeologies();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        // Initialize App
+        let app;
+        window.onload = function() {
+            app = new ApplicationState();
+            app.init();
+        };
+    </script>
+</body>
+</html>
